@@ -187,7 +187,7 @@
             return { tipo: 'siguiente_curso', mesIndex: MESES.length };
         }
 
-        function actualizarUI(resultado, posicionEfectiva, factorProvincial, competenciaReal) {
+        function actualizarUI(resultado, posicionEnBolsa, factorProvincial, competenciaReal) {
             document.getElementById('resultsBlock').classList.remove('hidden');
             
             const resultTextEl = document.getElementById('resultText');
@@ -219,7 +219,7 @@
                 return acc;
             }, []);
 
-            const posicionUsuarioData = new Array(MESES.length).fill(competenciaReal > 0 ? competenciaReal : null);
+            const posicionUsuarioData = new Array(MESES.length).fill(posicionEnBolsa > 0 ? posicionEnBolsa : null);
 
             cumulativeChart.data.datasets = [
                 {
@@ -231,7 +231,7 @@
                     tension: 0.2
                 },
                 {
-                    label: 'Tu Competencia Real Estimada',
+                    label: 'Tu Posición en Bolsa',
                     data: posicionUsuarioData,
                     borderColor: '#7f1d1d',
                     borderDash: [5, 5],
@@ -312,7 +312,7 @@
                 factorProvincial *= selectivityModifier;
                 
                 const resultado = calcularPronostico(competenciaReal, factorProvincial);
-                actualizarUI(resultado, posicion - vacantes, factorProvincial, competenciaReal);
+                actualizarUI(resultado, posicion, factorProvincial, competenciaReal);
             });
             
             // Simular un clic al cargar la página para mostrar el resultado inicial
