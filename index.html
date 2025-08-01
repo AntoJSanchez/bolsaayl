@@ -40,27 +40,16 @@
         <!-- Bloque de Entradas del Usuario -->
         <div class="bg-white rounded-2xl shadow-md p-6 mb-8">
             <h2 class="text-xl font-bold text-red-900 mb-4">Introduce tus datos para la simulación</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Columna 1: Datos Numéricos -->
-                <div class="space-y-4">
-                    <div>
-                        <label for="bolsaPos" class="block text-sm font-medium text-gray-700">Tu posición en bolsa</label>
-                        <input type="number" id="bolsaPos" value="600" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm p-2">
-                    </div>
-                    <div>
-                        <label for="vacantesAgosto" class="block text-sm font-medium text-gray-700">Vacantes informatizadas (Agosto)</label>
-                        <input type="number" id="vacantesAgosto" value="265" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm p-2">
-                    </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-lg mx-auto">
+                <div>
+                    <label for="bolsaPos" class="block text-sm font-medium text-gray-700">Tu posición en bolsa</label>
+                    <input type="number" id="bolsaPos" value="600" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm p-2">
                 </div>
-                <!-- Columna 2 y 3: Provincias -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Provincias seleccionadas</label>
-                    <div id="provinciasContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                        <!-- Checkboxes se insertarán aquí -->
-                    </div>
+                <div>
+                    <label for="vacantesAgosto" class="block text-sm font-medium text-gray-700">Vacantes informatizadas (Agosto)</label>
+                    <input type="number" id="vacantesAgosto" value="265" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm p-2">
                 </div>
             </div>
-            <div id="errorBlock" class="hidden text-center mt-4 p-3 rounded-lg bg-red-100 text-red-700"></div>
             <div class="mt-6 text-center">
                 <button id="calculateBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
                     Calcular Pronóstico
@@ -92,21 +81,7 @@
     </main>
 
     <script>
-        // --- DATOS BASE CON PONDERACIÓN DE DEMANDA (COPIADO) ---
-        const PROVINCIAS = {
-            'Almería': { poblacion: 753000, demandFactor: 1.2, checked: true },
-            'Málaga': { poblacion: 1750000, demandFactor: 1.2, checked: true },
-            'Granada': { poblacion: 930000, demandFactor: 0.95, checked: true },
-            'Huelva': { poblacion: 530000, demandFactor: 0.9, checked: true },
-            'Sevilla': { poblacion: 1960000, demandFactor: 0.85, checked: true },
-            'Jaén': { poblacion: 620000, demandFactor: 0.8, checked: true },
-            'Córdoba': { poblacion: 775000, demandFactor: 0.8, checked: true },
-            'Cádiz': { poblacion: 1250000, demandFactor: 0.75, checked: true }
-        };
-
-        const TOTAL_WEIGHTED_DEMAND = Object.values(PROVINCIAS).reduce((sum, p) => sum + (p.poblacion * p.demandFactor), 0);
-
-        // --- RITMO DE LA BOLSA (MANTENIDO DE AUDICIÓN Y LENGUAJE) ---
+        // --- RITMO DE LA BOLSA (AJUSTADO A NUEVOS DATOS) ---
         const LLAMAMIENTOS_MENSUALES = {
             'Sept': 325, 'Oct': 70, 'Nov': 50, 'Dic': 5,
             'Ene': 110, 'Feb': 15, 'Mar': 25, 'Abr': 12, 'May': 12, 'Jun': 3
@@ -160,19 +135,19 @@
             };
         }
 
-        function calcularPronostico(competenciaReal, factorProvincial) {
-            if (competenciaReal <= 0) {
+        function calcularPronostico(posicionEfectiva) {
+            if (posicionEfectiva <= 0) {
                 return { tipo: 'verano', mesIndex: -1 };
             }
 
             let llamamientosAcumulados = 0;
             for (let i = 0; i < MESES.length; i++) {
                 const mes = MESES[i];
-                const llamamientosMesPonderados = LLAMAMIENTOS_MENSUALES[mes] * factorProvincial;
+                const llamamientosMes = LLAMAMIENTOS_MENSUALES[mes];
                 
-                if (llamamientosAcumulados + llamamientosMesPonderados >= competenciaReal) {
-                    const restante = competenciaReal - llamamientosAcumulados;
-                    const proporcionMes = llamamientosMesPonderados > 0 ? restante / llamamientosMesPonderados : 0;
+                if (llamamientosAcumulados + llamamientosMes >= posicionEfectiva) {
+                    const restante = posicionEfectiva - llamamientosAcumulados;
+                    const proporcionMes = llamamientosMes > 0 ? restante / llamamientosMes : 0;
                     
                     const callsInMonth = CALENDARIO_SIPRI.filter(c => c.mes === mes);
                     if (callsInMonth.length > 0) {
@@ -181,22 +156,22 @@
                         return { tipo: 'especifico', call: callsInMonth[callIndex], semana: `Semana ${semana}`, mes: mes, mesIndex: i };
                     }
                 }
-                llamamientosAcumulados += llamamientosMesPonderados;
+                llamamientosAcumulados += llamamientosMes;
             }
 
             return { tipo: 'siguiente_curso', mesIndex: MESES.length };
         }
 
-        function actualizarUI(resultado, posicionEnBolsa, factorProvincial, competenciaReal) {
+        function actualizarUI(resultado, posicionEfectiva) {
             document.getElementById('resultsBlock').classList.remove('hidden');
             
             const resultTextEl = document.getElementById('resultText');
             switch(resultado.tipo) {
                 case 'verano':
-                    resultTextEl.innerHTML = '<p class="text-4xl font-bold">¡Adjudicación estimada en Verano!</p>';
+                    resultTextEl.innerHTML = '<p class="text-4xl font-bold">¡Adjudicación estimada en Verano!</p><p class="text-sm mt-2">Tu posición es inferior a las vacantes iniciales.</p>';
                     break;
                 case 'siguiente_curso':
-                    resultTextEl.innerHTML = `<p class="text-3xl font-bold">No se estima llamada este curso.</p><p class="text-sm mt-2">Tu competencia real estimada (${Math.round(competenciaReal)} personas) supera los llamamientos previstos para tus provincias.</p>`;
+                    resultTextEl.innerHTML = `<p class="text-3xl font-bold">No se estima llamada este curso.</p><p class="text-sm mt-2">Tu posición efectiva (${Math.round(posicionEfectiva)}) supera los llamamientos totales previstos.</p>`;
                     break;
                 case 'especifico':
                     const call = resultado.call;
@@ -206,32 +181,32 @@
                             <p>Llamamiento estimado: <strong>${call.dia}</strong></p>
                             <p>Incorporación prevista: <strong>${call.incorporacion}</strong></p>
                         </div>
-                        <p class="text-xs mt-3 opacity-80">Cálculo basado en una competencia real estimada de ${Math.round(competenciaReal)} personas para tus provincias.</p>
+                        <p class="text-xs mt-3 opacity-80">Cálculo basado en una posición efectiva de ${Math.round(posicionEfectiva)}.</p>
                     `;
                     break;
             }
 
             if (!cumulativeChart) createCharts();
             
-            const avancePersonalizadoAcumulado = MESES.reduce((acc, mes) => {
-                const avanceMes = LLAMAMIENTOS_MENSUALES[mes] * factorProvincial;
+            const avanceAcumulado = MESES.reduce((acc, mes) => {
+                const avanceMes = LLAMAMIENTOS_MENSUALES[mes];
                 acc.push((acc.length > 0 ? acc[acc.length - 1] : 0) + avanceMes);
                 return acc;
             }, []);
 
-            const posicionUsuarioData = new Array(MESES.length).fill(posicionEnBolsa > 0 ? posicionEnBolsa : null);
+            const posicionUsuarioData = new Array(MESES.length).fill(posicionEfectiva > 0 ? posicionEfectiva : null);
 
             cumulativeChart.data.datasets = [
                 {
-                    label: 'Avance Estimado en tus Provincias',
-                    data: avancePersonalizadoAcumulado,
+                    label: 'Avance Estimado de la Bolsa',
+                    data: avanceAcumulado,
                     borderColor: '#d32f2f',
                     backgroundColor: 'rgba(211, 47, 47, 0.2)',
                     fill: true,
                     tension: 0.2
                 },
                 {
-                    label: 'Tu Posición en Bolsa',
+                    label: 'Tu Posición Efectiva',
                     data: posicionUsuarioData,
                     borderColor: '#7f1d1d',
                     borderDash: [5, 5],
@@ -245,7 +220,7 @@
             const coloresBarras = MESES.map((_, index) => index === resultado.mesIndex ? '#7f1d1d' : '#fca5a5');
 
             monthlyCallsChart.data.datasets = [{
-                label: 'Llamamientos Mensuales (General)',
+                label: 'Llamamientos Mensuales',
                 data: Object.values(LLAMAMIENTOS_MENSUALES),
                 backgroundColor: coloresBarras,
                 borderRadius: 4
@@ -254,65 +229,14 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const provinciasContainer = document.getElementById('provinciasContainer');
-            Object.keys(PROVINCIAS).forEach(nombre => {
-                const div = document.createElement('div');
-                div.className = 'flex items-center';
-                const input = document.createElement('input');
-                input.type = 'checkbox';
-                input.id = `prov-${nombre}`;
-                input.name = nombre;
-                input.checked = PROVINCIAS[nombre].checked;
-                input.className = 'h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500';
-                const label = document.createElement('label');
-                label.htmlFor = `prov-${nombre}`;
-                label.textContent = nombre;
-                label.className = 'ml-2 block text-sm text-gray-900';
-                div.appendChild(input);
-                div.appendChild(label);
-                provinciasContainer.appendChild(div);
-            });
-
             document.getElementById('calculateBtn').addEventListener('click', () => {
-                const errorBlock = document.getElementById('errorBlock');
-                errorBlock.classList.add('hidden');
-
                 const posicion = parseInt(document.getElementById('bolsaPos').value);
                 const vacantes = parseInt(document.getElementById('vacantesAgosto').value);
                 
-                const provinciasSeleccionadas = Array.from(document.querySelectorAll('#provinciasContainer input:checked')).map(el => el.name);
-
-                if (provinciasSeleccionadas.length === 0) {
-                    errorBlock.textContent = "Por favor, selecciona al menos una provincia.";
-                    errorBlock.classList.remove('hidden');
-                    return;
-                }
-
-                const competidoresDirectos = Math.max(0, posicion - vacantes);
+                const posicionEfectiva = Math.max(0, posicion - vacantes);
                 
-                const pesoProvinciasNoSeleccionadas = Object.keys(PROVINCIAS)
-                    .filter(p => !provinciasSeleccionadas.includes(p))
-                    .reduce((sum, p) => sum + (PROVINCIAS[p].poblacion * PROVINCIAS[p].demandFactor), 0);
-                
-                const ratioFuga = pesoProvinciasNoSeleccionadas / TOTAL_WEIGHTED_DEMAND;
-                const competidoresFugados = competidoresDirectos * ratioFuga;
-                const competenciaReal = competidoresDirectos - competidoresFugados;
-
-                const numProvincias = provinciasSeleccionadas.length;
-                let selectivityModifier = 1.0;
-                if (numProvincias <= 2) {
-                    selectivityModifier = 0.85; 
-                } else if (numProvincias >= 6) {
-                    selectivityModifier = 1.15;
-                }
-
-                const userWeightedDemand = provinciasSeleccionadas.reduce((sum, prov) => sum + (PROVINCIAS[prov].poblacion * PROVINCIAS[prov].demandFactor), 0);
-                let factorProvincial = userWeightedDemand / TOTAL_WEIGHTED_DEMAND;
-                
-                factorProvincial *= selectivityModifier;
-                
-                const resultado = calcularPronostico(competenciaReal, factorProvincial);
-                actualizarUI(resultado, posicion, factorProvincial, competenciaReal);
+                const resultado = calcularPronostico(posicionEfectiva);
+                actualizarUI(resultado, posicionEfectiva);
             });
             
             // Simular un clic al cargar la página para mostrar el resultado inicial
