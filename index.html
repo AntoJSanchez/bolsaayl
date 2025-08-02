@@ -37,7 +37,6 @@
             <p class="text-md text-red-700">Bolsa de Audición y Lenguaje - Andalucía 2025/26</p>
         </header>
 
-        <!-- Bloque de Entradas del Usuario -->
         <div class="bg-white rounded-2xl shadow-md p-6 mb-8">
             <h2 class="text-xl font-bold text-red-900 mb-4">Introduce tus datos para la simulación</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-lg mx-auto">
@@ -57,189 +56,274 @@
             </div>
         </div>
 
-        <!-- Bloque de Resultados -->
         <div id="resultsBlock" class="hidden">
              <div id="resultText" class="text-center mb-8 p-6 rounded-2xl shadow-lg text-white result-card">
-                <!-- El resultado se inyectará aquí -->
-            </div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="bg-white rounded-2xl shadow-md p-6">
-                    <h3 class="text-lg font-bold text-red-900 mb-2 text-center">Avance Acumulado de la Bolsa</h3>
-                    <div class="chart-container">
-                        <canvas id="cumulativeChart"></canvas>
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl shadow-md p-6">
-                    <h3 class="text-lg font-bold text-red-900 mb-2 text-center">Llamamientos Estimados por Mes</h3>
-                    <div class="chart-container">
-                        <canvas id="monthlyCallsChart"></canvas>
-                    </div>
-                </div>
-            </div>
+                 </div>
+             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                 <div class="bg-white rounded-2xl shadow-md p-6">
+                     <h3 class="text-lg font-bold text-red-900 mb-2 text-center">Avance Acumulado de la Bolsa</h3>
+                     <div class="chart-container">
+                         <canvas id="cumulativeChart"></canvas>
+                     </div>
+                 </div>
+                 <div class="bg-white rounded-2xl shadow-md p-6">
+                     <h3 class="text-lg font-bold text-red-900 mb-2 text-center">Llamamientos Estimados por Mes</h3>
+                     <div class="chart-container">
+                         <canvas id="monthlyCallsChart"></canvas>
+                     </div>
+                 </div>
+             </div>
         </div>
-
     </main>
 
     <script>
-        // --- RITMO DE LA BOLSA (AJUSTADO A NUEVOS DATOS) ---
-        const LLAMAMIENTOS_MENSUALES = {
-            'Sept': 325, 'Oct': 70, 'Nov': 50, 'Dic': 5,
-            'Ene': 110, 'Feb': 15, 'Mar': 25, 'Abr': 12, 'May': 12, 'Jun': 3
-        };
-        const MESES = Object.keys(LLAMAMIENTOS_MENSUALES);
-        
-        const CALENDARIO_SIPRI = [
-            { mes: 'Sept', dia: 'Jueves 4', incorporacion: 'Miércoles 10 Sep' }, { mes: 'Sept', dia: 'Martes 9', incorporacion: 'Lunes 15 Sep' }, { mes: 'Sept', dia: 'Jueves 11', incorporacion: 'Miércoles 17 Sep' }, { mes: 'Sept', dia: 'Martes 16', incorporacion: 'Lunes 22 Sep' }, { mes: 'Sept', dia: 'Jueves 18', incorporacion: 'Miércoles 24 Sep' }, { mes: 'Sept', dia: 'Martes 23', incorporacion: 'Lunes 29 Sep' }, { mes: 'Sept', dia: 'Jueves 25', incorporacion: 'Miércoles 1 Oct' }, { mes: 'Sept', dia: 'Martes 30', incorporacion: 'Lunes 6 Oct' },
-            { mes: 'Oct', dia: 'Jueves 2', incorporacion: 'Miércoles 8 Oct' }, { mes: 'Oct', dia: 'Martes 7', incorporacion: 'Martes 14 Oct' }, { mes: 'Oct', dia: 'Jueves 9', incorporacion: 'Miércoles 15 Oct' }, { mes: 'Oct', dia: 'Martes 14', incorporacion: 'Lunes 20 Oct' }, { mes: 'Oct', dia: 'Jueves 16', incorporacion: 'Miércoles 22 Oct' }, { mes: 'Oct', dia: 'Martes 21', incorporacion: 'Lunes 27 Oct' }, { mes: 'Oct', dia: 'Jueves 23', incorporacion: 'Miércoles 29 Oct' }, { mes: 'Oct', dia: 'Martes 28', incorporacion: 'Lunes 3 Nov' }, { mes: 'Oct', dia: 'Jueves 30', incorporacion: 'Miércoles 5 Nov' },
-            { mes: 'Nov', dia: 'Martes 4', incorporacion: 'Lunes 10 Nov' }, { mes: 'Nov', dia: 'Jueves 6', incorporacion: 'Miércoles 12 Nov' }, { mes: 'Nov', dia: 'Martes 11', incorporacion: 'Lunes 17 Nov' }, { mes: 'Nov', dia: 'Jueves 13', incorporacion: 'Miércoles 19 Nov' }, { mes: 'Nov', dia: 'Martes 18', incorporacion: 'Lunes 24 Nov' }, { mes: 'Nov', dia: 'Jueves 20', incorporacion: 'Miércoles 26 Nov' }, { mes: 'Nov', dia: 'Martes 25', incorporacion: 'Lunes 1 Dic' }, { mes: 'Nov', dia: 'Jueves 27', incorporacion: 'Miércoles 3 Dic' },
-            { mes: 'Dic', dia: 'Martes 2', incorporacion: 'Martes 9 Dic' }, { mes: 'Dic', dia: 'Jueves 4', incorporacion: 'Miércoles 10 Dic' }, { mes: 'Dic', dia: 'Martes 9', incorporacion: 'Lunes 15 Dic' }, { mes: 'Dic', dia: 'Jueves 11', incorporacion: 'Miércoles 17 Dic' },
-            { mes: 'Ene', dia: 'Jueves 8', incorporacion: 'Miércoles 14 Ene' }, { mes: 'Ene', dia: 'Martes 13', incorporacion: 'Lunes 19 Ene' }, { mes: 'Ene', dia: 'Jueves 15', incorporacion: 'Miércoles 21 Ene' }, { mes: 'Ene', dia: 'Martes 20', incorporacion: 'Lunes 26 Ene' }, { mes: 'Ene', dia: 'Jueves 22', incorporacion: 'Miércoles 28 Ene' }, { mes: 'Ene', dia: 'Martes 27', incorporacion: 'Lunes 2 Feb' }, { mes: 'Ene', dia: 'Jueves 29', incorporacion: 'Miércoles 4 Feb' },
-            { mes: 'Feb', dia: 'Martes 3', incorporacion: 'Lunes 9 Feb' }, { mes: 'Feb', dia: 'Jueves 5', incorporacion: 'Miércoles 11 Feb' }, { mes: 'Feb', dia: 'Martes 10', incorporacion: 'Lunes 16 Feb' }, { mes: 'Feb', dia: 'Jueves 12', incorporacion: 'Miércoles 18 Feb' }, { mes: 'Feb', dia: 'Martes 17', incorporacion: 'Lunes 23 Feb' }, { mes: 'Feb', dia: 'Jueves 19', incorporacion: 'Miércoles 25 Feb' }, { mes: 'Feb', dia: 'Martes 24', incorporacion: 'Lunes 2 Mar' }, { mes: 'Feb', dia: 'Jueves 26', incorporacion: 'Miércoles 4 Mar' },
-            { mes: 'Mar', dia: 'Martes 3', incorporacion: 'Lunes 9 Mar' }, { mes: 'Mar', dia: 'Jueves 5', incorporacion: 'Miércoles 11 Mar' }, { mes: 'Mar', dia: 'Martes 10', incorporacion: 'Lunes 16 Mar' }, { mes: 'Mar', dia: 'Jueves 12', incorporacion: 'Miércoles 18 Mar' }, { mes: 'Mar', dia: 'Martes 17', incorporacion: 'Lunes 23 Mar' }, { mes: 'Mar', dia: 'Jueves 19', incorporacion: 'Miércoles 25 Mar' }, { mes: 'Mar', dia: 'Martes 24', incorporacion: 'Lunes 6 Abr' },
-            { mes: 'Abr', dia: 'Martes 7', incorporacion: 'Lunes 13 Abr' }, { mes: 'Abr', dia: 'Jueves 9', incorporacion: 'Miércoles 15 Abr' }, { mes: 'Abr', dia: 'Martes 14', incorporacion: 'Lunes 20 Abr' }, { mes: 'Abr', dia: 'Jueves 16', incorporacion: 'Miércoles 22 Abr' }, { mes: 'Abr', dia: 'Martes 21', incorporacion: 'Lunes 27 Abr' }, { mes: 'Abr', dia: 'Jueves 23', incorporacion: 'Miércoles 29 Abr' }, { mes: 'Abr', dia: 'Martes 28', incorporacion: 'Lunes 4 May' }, { mes: 'Abr', dia: 'Jueves 30', incorporacion: 'Miércoles 6 May' },
-            { mes: 'May', dia: 'Martes 5', incorporacion: 'Lunes 11 May' }, { mes: 'May', dia: 'Jueves 7', incorporacion: 'Miércoles 13 May' }, { mes: 'May', dia: 'Martes 12', incorporacion: 'Lunes 18 May' }, { mes: 'May', dia: 'Jueves 14', incorporacion: 'Miércoles 20 May' }, { mes: 'May', dia: 'Martes 19', incorporacion: 'Lunes 25 May' }, { mes: 'May', dia: 'Jueves 21', incorporacion: 'Miércoles 27 May' }, { mes: 'May', dia: 'Martes 26', incorporacion: 'Lunes 1 Jun' }, { mes: 'May', dia: 'Jueves 28', incorporacion: 'Miércoles 3 Jun' },
-            { mes: 'Jun', dia: 'Martes 2', incorporacion: 'Lunes 8 Jun' }, { mes: 'Jun', dia: 'Jueves 4', incorporacion: 'Miércoles 10 Jun' },
-        ];
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATOS BASE PARA AUDICIÓN Y LENGUAJE ---
+            const LLAMAMIENTOS_MENSUALES = {
+                'Sept': 325, 'Oct': 70, 'Nov': 50, 'Dic': 5,
+                'Ene': 110, 'Feb': 15, 'Mar': 25, 'Abr': 12, 'May': 12, 'Jun': 3
+            };
+            const MESES = Object.keys(LLAMAMIENTOS_MENSUALES);
+            
+            const CALENDARIO_SIPRI = [
+                { mes: 'Sept', dia: 'Jueves 4', incorporacion: 'Miércoles 10 Sep' }, { mes: 'Sept', dia: 'Martes 9', incorporacion: 'Lunes 15 Sep' }, { mes: 'Sept', dia: 'Jueves 11', incorporacion: 'Miércoles 17 Sep' }, { mes: 'Sept', dia: 'Martes 16', incorporacion: 'Lunes 22 Sep' }, { mes: 'Sept', dia: 'Jueves 18', incorporacion: 'Miércoles 24 Sep' }, { mes: 'Sept', dia: 'Martes 23', incorporacion: 'Lunes 29 Sep' }, { mes: 'Sept', dia: 'Jueves 25', incorporacion: 'Miércoles 1 Oct' }, { mes: 'Sept', dia: 'Martes 30', incorporacion: 'Lunes 6 Oct' },
+                { mes: 'Oct', dia: 'Jueves 2', incorporacion: 'Miércoles 8 Oct' }, { mes: 'Oct', dia: 'Martes 7', incorporacion: 'Martes 14 Oct' }, { mes: 'Oct', dia: 'Jueves 9', incorporacion: 'Miércoles 15 Oct' }, { mes: 'Oct', dia: 'Martes 14', incorporacion: 'Lunes 20 Oct' }, { mes: 'Oct', dia: 'Jueves 16', incorporacion: 'Miércoles 22 Oct' }, { mes: 'Oct', dia: 'Martes 21', incorporacion: 'Lunes 27 Oct' }, { mes: 'Oct', dia: 'Jueves 23', incorporacion: 'Miércoles 29 Oct' }, { mes: 'Oct', dia: 'Martes 28', incorporacion: 'Lunes 3 Nov' }, { mes: 'Oct', dia: 'Jueves 30', incorporacion: 'Miércoles 5 Nov' },
+                { mes: 'Nov', dia: 'Martes 4', incorporacion: 'Lunes 10 Nov' }, { mes: 'Nov', dia: 'Jueves 6', incorporacion: 'Miércoles 12 Nov' }, { mes: 'Nov', dia: 'Martes 11', incorporacion: 'Lunes 17 Nov' }, { mes: 'Nov', dia: 'Jueves 13', incorporacion: 'Miércoles 19 Nov' }, { mes: 'Nov', dia: 'Martes 18', incorporacion: 'Lunes 24 Nov' }, { mes: 'Nov', dia: 'Jueves 20', incorporacion: 'Miércoles 26 Nov' }, { mes: 'Nov', dia: 'Martes 25', incorporacion: 'Lunes 1 Dic' }, { mes: 'Nov', dia: 'Jueves 27', incorporacion: 'Miércoles 3 Dic' },
+                { mes: 'Dic', dia: 'Martes 2', incorporacion: 'Martes 9 Dic' }, { mes: 'Dic', dia: 'Jueves 4', incorporacion: 'Miércoles 10 Dic' }, { mes: 'Dic', dia: 'Martes 9', incorporacion: 'Lunes 15 Dic' }, { mes: 'Dic', dia: 'Jueves 11', incorporacion: 'Miércoles 17 Dic' },
+                { mes: 'Ene', dia: 'Jueves 8', incorporacion: 'Miércoles 14 Ene' }, { mes: 'Ene', dia: 'Martes 13', incorporacion: 'Lunes 19 Ene' }, { mes: 'Ene', dia: 'Jueves 15', incorporacion: 'Miércoles 21 Ene' }, { mes: 'Ene', dia: 'Martes 20', incorporacion: 'Lunes 26 Ene' }, { mes: 'Ene', dia: 'Jueves 22', incorporacion: 'Miércoles 28 Ene' }, { mes: 'Ene', dia: 'Martes 27', incorporacion: 'Lunes 2 Feb' }, { mes: 'Ene', dia: 'Jueves 29', incorporacion: 'Miércoles 4 Feb' },
+                { mes: 'Feb', dia: 'Martes 3', incorporacion: 'Lunes 9 Feb' }, { mes: 'Feb', dia: 'Jueves 5', incorporacion: 'Miércoles 11 Feb' }, { mes: 'Feb', dia: 'Martes 10', incorporacion: 'Lunes 16 Feb' }, { mes: 'Feb', dia: 'Jueves 12', incorporacion: 'Miércoles 18 Feb' }, { mes: 'Feb', dia: 'Martes 17', incorporacion: 'Lunes 23 Feb' }, { mes: 'Feb', dia: 'Jueves 19', incorporacion: 'Miércoles 25 Feb' }, { mes: 'Feb', dia: 'Martes 24', incorporacion: 'Lunes 2 Mar' }, { mes: 'Feb', dia: 'Jueves 26', incorporacion: 'Miércoles 4 Mar' },
+                { mes: 'Mar', dia: 'Martes 3', incorporacion: 'Lunes 9 Mar' }, { mes: 'Mar', dia: 'Jueves 5', incorporacion: 'Miércoles 11 Mar' }, { mes: 'Mar', dia: 'Martes 10', incorporacion: 'Lunes 16 Mar' }, { mes: 'Mar', dia: 'Jueves 12', incorporacion: 'Miércoles 18 Mar' }, { mes: 'Mar', dia: 'Martes 17', incorporacion: 'Lunes 23 Mar' }, { mes: 'Mar', dia: 'Jueves 19', incorporacion: 'Miércoles 25 Mar' }, { mes: 'Mar', dia: 'Martes 24', incorporacion: 'Lunes 6 Abr' },
+                { mes: 'Abr', dia: 'Martes 7', incorporacion: 'Lunes 13 Abr' }, { mes: 'Abr', dia: 'Jueves 9', incorporacion: 'Miércoles 15 Abr' }, { mes: 'Abr', dia: 'Martes 14', incorporacion: 'Lunes 20 Abr' }, { mes: 'Abr', dia: 'Jueves 16', incorporacion: 'Miércoles 22 Abr' }, { mes: 'Abr', dia: 'Martes 21', incorporacion: 'Lunes 27 Abr' }, { mes: 'Abr', dia: 'Jueves 23', incorporacion: 'Miércoles 29 Abr' }, { mes: 'Abr', dia: 'Martes 28', incorporacion: 'Lunes 4 May' }, { mes: 'Abr', dia: 'Jueves 30', incorporacion: 'Miércoles 6 May' },
+                { mes: 'May', dia: 'Martes 5', incorporacion: 'Lunes 11 May' }, { mes: 'May', dia: 'Jueves 7', incorporacion: 'Miércoles 13 May' }, { mes: 'May', dia: 'Martes 12', incorporacion: 'Lunes 18 May' }, { mes: 'May', dia: 'Jueves 14', incorporacion: 'Miércoles 20 May' }, { mes: 'May', dia: 'Martes 19', incorporacion: 'Lunes 25 May' }, { mes: 'May', dia: 'Jueves 21', incorporacion: 'Miércoles 27 May' }, { mes: 'May', dia: 'Martes 26', incorporacion: 'Lunes 1 Jun' }, { mes: 'May', dia: 'Jueves 28', incorporacion: 'Miércoles 3 Jun' },
+                { mes: 'Jun', dia: 'Martes 2', incorporacion: 'Lunes 8 Jun' }, { mes: 'Jun', dia: 'Jueves 4', incorporacion: 'Miércoles 10 Jun' },
+            ];
 
-        // --- LÓGICA DE GRÁFICOS ---
-        let cumulativeChart, monthlyCallsChart;
+            // --- PLUGIN PERSONALIZADO PARA DIBUJAR LA LÍNEA Y ETIQUETA ---
+            const verticalLinePlugin = {
+                id: 'verticalLinePlugin',
+                afterDatasetsDraw: (chart) => {
+                    const intersection = chart.options.plugins.verticalLinePlugin.intersection;
+                    if (!intersection || !intersection.label) {
+                        return;
+                    }
 
-        function createCharts() {
-            const cumulativeCtx = document.getElementById('cumulativeChart').getContext('2d');
-            cumulativeChart = new Chart(cumulativeCtx, {
-                type: 'line',
-                data: { labels: MESES, datasets: [] },
-                options: getChartOptions('Posición en bolsa')
-            });
+                    const ctx = chart.ctx;
+                    const xAxis = chart.scales.x;
+                    const yAxis = chart.scales.y;
 
-            const monthlyCtx = document.getElementById('monthlyCallsChart').getContext('2d');
-            monthlyCallsChart = new Chart(monthlyCtx, {
-                type: 'bar',
-                data: { labels: MESES, datasets: [] },
-                options: getChartOptions('Nº de llamamientos')
-            });
-        }
+                    const xCoord = xAxis.getPixelForValue(intersection.xIndex);
+                    const yTop = yAxis.getPixelForValue(intersection.yValue);
+                    const yBottom = yAxis.bottom;
 
-        function getChartOptions(yAxisTitle) {
-            return {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: true, position: 'bottom' } },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: { display: true, text: yAxisTitle, color: '#b91c1c' }
-                    },
-                    x: { ticks: { color: '#333' } }
+                    ctx.save();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(xCoord, yTop);
+                    ctx.lineTo(xCoord, yBottom);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#b91c1c'; 
+                    ctx.setLineDash([6, 6]); 
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#b91c1c';
+                    ctx.font = 'bold 12px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(intersection.label, xCoord, yTop - 10);
+
+                    ctx.restore();
                 }
             };
-        }
 
-        function calcularPronostico(posicionEfectiva) {
-            if (posicionEfectiva <= 0) {
-                return { tipo: 'verano', mesIndex: -1 };
+            // --- LÓGICA DE GRÁFICOS ---
+            let cumulativeChart, monthlyCallsChart;
+
+            function createCharts() {
+                const cumulativeCtx = document.getElementById('cumulativeChart').getContext('2d');
+                cumulativeChart = new Chart(cumulativeCtx, { 
+                    type: 'line', 
+                    data: { labels: [], datasets: [] },
+                    options: getChartOptions('Posiciones avanzadas'),
+                    plugins: [verticalLinePlugin] 
+                });
+
+                const monthlyCtx = document.getElementById('monthlyCallsChart').getContext('2d');
+                monthlyCallsChart = new Chart(monthlyCtx, { 
+                    type: 'bar', 
+                    data: { labels: MESES, datasets: [] }, 
+                    options: getChartOptions('Nº de llamamientos') 
+                });
             }
 
-            let llamamientosAcumulados = 0;
-            for (let i = 0; i < MESES.length; i++) {
-                const mes = MESES[i];
-                const llamamientosMes = LLAMAMIENTOS_MENSUALES[mes];
-                
-                if (llamamientosAcumulados + llamamientosMes >= posicionEfectiva) {
-                    const restante = posicionEfectiva - llamamientosAcumulados;
-                    const proporcionMes = llamamientosMes > 0 ? restante / llamamientosMes : 0;
-                    
-                    const callsInMonth = CALENDARIO_SIPRI.filter(c => c.mes === mes);
-                    if (callsInMonth.length > 0) {
-                        const callIndex = Math.min(Math.floor(proporcionMes * callsInMonth.length), callsInMonth.length - 1);
-                        const semana = Math.max(1, Math.ceil(proporcionMes * 4));
-                        return { tipo: 'especifico', call: callsInMonth[callIndex], semana: `Semana ${semana}`, mes: mes, mesIndex: i };
+            function getChartOptions(yAxisTitle) {
+                return {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: { 
+                        legend: { display: true, position: 'bottom' },
+                        verticalLinePlugin: {
+                            intersection: null
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleFont: { weight: 'bold' },
+                            bodyFont: { family: 'Inter' },
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    const datasetLabel = context.dataset.label || '';
+                                    const value = context.parsed.y;
+                                    
+                                    if (context.datasetIndex === 0) {
+                                        const data = context.dataset.data;
+                                        const previousValue = context.dataIndex > 0 ? data[context.dataIndex - 1] : 0;
+                                        const monthlyCalls = value - previousValue;
+                                        const label1 = ` Acumulado: ${value}`;
+                                        const label2 = context.dataIndex === 0 ? ` Asignadas: ${monthlyCalls}` : ` Nuevas: ${monthlyCalls}`;
+                                        return [label1, label2];
+                                    }
+                                    
+                                    if (context.datasetIndex === 1) {
+                                        return ` ${datasetLabel}: ${value}`;
+                                    }
+                                    return `${datasetLabel}: ${value}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: yAxisTitle, color: '#b91c1c' } },
+                        x: { ticks: { color: '#333' } }
                     }
-                }
-                llamamientosAcumulados += llamamientosMes;
+                };
             }
 
-            return { tipo: 'siguiente_curso', mesIndex: MESES.length };
-        }
+            // --- LÓGICA DE CÁLCULO ---
+            function calculateForecast(posicion, vacantes) {
+                if (posicion <= vacantes) {
+                    return { tipo: 'verano' };
+                }
 
-        function actualizarUI(resultado, posicionEfectiva) {
-            document.getElementById('resultsBlock').classList.remove('hidden');
-            
-            const resultTextEl = document.getElementById('resultText');
-            switch(resultado.tipo) {
-                case 'verano':
-                    resultTextEl.innerHTML = '<p class="text-4xl font-bold">¡Adjudicación estimada en Verano!</p><p class="text-sm mt-2">Tu posición es inferior a las vacantes iniciales.</p>';
-                    break;
-                case 'siguiente_curso':
-                    resultTextEl.innerHTML = `<p class="text-3xl font-bold">No se estima llamada este curso.</p><p class="text-sm mt-2">Tu posición efectiva (${Math.round(posicionEfectiva)}) supera los llamamientos totales previstos.</p>`;
-                    break;
-                case 'especifico':
-                    const call = resultado.call;
-                    resultTextEl.innerHTML = `
-                        <p class="text-3xl font-bold">${resultado.semana} de ${resultado.mes}</p>
-                        <div class="mt-2 text-xl">
-                            <p>Llamamiento estimado: <strong>${call.dia}</strong></p>
-                            <p>Incorporación prevista: <strong>${call.incorporacion}</strong></p>
-                        </div>
-                        <p class="text-xs mt-3 opacity-80">Cálculo basado en una posición efectiva de ${Math.round(posicionEfectiva)}.</p>
-                    `;
-                    break;
+                let llamamientosAcumulados = vacantes;
+                for (let i = 0; i < MESES.length; i++) {
+                    const mes = MESES[i];
+                    const llamamientosMes = LLAMAMIENTOS_MENSUALES[mes];
+                    
+                    if (llamamientosAcumulados + llamamientosMes >= posicion) {
+                        const restante = posicion - llamamientosAcumulados;
+                        const proporcionMes = llamamientosMes > 0 ? restante / llamamientosMes : 0;
+                        const semana = Math.ceil(proporcionMes * 4);
+                        const fraccionDelMesPorSemana = (semana - 0.5) / 4;
+                        const xIndex = (i + 1) + fraccionDelMesPorSemana;
+
+                        let specificCall = null;
+                        const callsInMonth = CALENDARIO_SIPRI.filter(c => c.mes === mes);
+                        if (callsInMonth.length > 0) {
+                            const callIndex = Math.min(Math.floor(proporcionMes * callsInMonth.length), callsInMonth.length - 1);
+                            specificCall = callsInMonth[callIndex];
+                        }
+
+                        return { tipo: 'especifico', semana: `Semana ${Math.max(1, semana)}`, call: specificCall, mes: mes, mesIndex: i, xIndex: xIndex };
+                    }
+                    llamamientosAcumulados += llamamientosMes;
+                }
+
+                return { tipo: 'siguiente_curso' };
             }
 
-            if (!cumulativeChart) createCharts();
-            
-            const avanceAcumulado = MESES.reduce((acc, mes) => {
-                const avanceMes = LLAMAMIENTOS_MENSUALES[mes];
-                acc.push((acc.length > 0 ? acc[acc.length - 1] : 0) + avanceMes);
-                return acc;
-            }, []);
-
-            const posicionUsuarioData = new Array(MESES.length).fill(posicionEfectiva > 0 ? posicionEfectiva : null);
-
-            cumulativeChart.data.datasets = [
-                {
-                    label: 'Avance Estimado de la Bolsa',
-                    data: avanceAcumulado,
-                    borderColor: '#d32f2f',
-                    backgroundColor: 'rgba(211, 47, 47, 0.2)',
-                    fill: true,
-                    tension: 0.2
-                },
-                {
-                    label: 'Tu Posición Efectiva',
-                    data: posicionUsuarioData,
-                    borderColor: '#7f1d1d',
-                    borderDash: [5, 5],
-                    backgroundColor: 'transparent',
-                    pointRadius: 0,
-                    tension: 0.1
+            // --- LÓGICA DE ACTUALIZACIÓN DE UI ---
+            function updateUI(resultado, posicion, vacantes) {
+                document.getElementById('resultsBlock').classList.remove('hidden');
+                
+                const resultTextEl = document.getElementById('resultText');
+                switch(resultado.tipo) {
+                    case 'verano':
+                        resultTextEl.innerHTML = `<p class="text-3xl font-bold">¡Adjudicación en Verano!</p><p class="text-lg mt-2 opacity-90">Con tu posición (${posicion}), es muy probable que obtengas una de las ${vacantes} vacantes informatizadas.</p>`;
+                        break;
+                    case 'siguiente_curso':
+                        resultTextEl.innerHTML = `<p class="text-3xl font-bold">No se estima llamada este curso.</p><p class="text-lg mt-2 opacity-90">Tu posición (${posicion}) supera los llamamientos totales previstos.</p>`;
+                        break;
+                    case 'especifico':
+                        const call = resultado.call;
+                        resultTextEl.innerHTML = `
+                            <p class="text-3xl font-bold">Estimación: ${resultado.semana} de ${resultado.mes}</p>
+                            ${call ? `<div class="mt-2 text-xl">
+                                <p>Llamamiento SIPRI: <strong>${call.dia}</strong></p>
+                                <p>Incorporación prevista: <strong>${call.incorporacion}</strong></p>
+                            </div>` : ''}
+                        `;
+                        break;
                 }
-            ];
-            cumulativeChart.update();
 
-            const coloresBarras = MESES.map((_, index) => index === resultado.mesIndex ? '#7f1d1d' : '#fca5a5');
+                if (!cumulativeChart) createCharts();
+                
+                const labelsParaGrafica = ['Vac. Informatizadas', ...MESES];
+                
+                let acumulado = vacantes;
+                const avanceGeneralAcumulado = [vacantes, ...MESES.map(mes => {
+                    acumulado += LLAMAMIENTOS_MENSUALES[mes];
+                    return acumulado;
+                })];
 
-            monthlyCallsChart.data.datasets = [{
-                label: 'Llamamientos Mensuales',
-                data: Object.values(LLAMAMIENTOS_MENSUALES),
-                backgroundColor: coloresBarras,
-                borderRadius: 4
-            }];
-            monthlyCallsChart.update();
-        }
+                const posicionUsuarioData = new Array(labelsParaGrafica.length).fill(posicion > 0 ? posicion : null);
 
-        document.addEventListener('DOMContentLoaded', () => {
+                if (resultado.tipo === 'especifico' && resultado.xIndex !== null) {
+                    cumulativeChart.options.plugins.verticalLinePlugin.intersection = {
+                        xIndex: resultado.xIndex,
+                        yValue: posicion,
+                        label: resultado.semana
+                    };
+                } else {
+                    cumulativeChart.options.plugins.verticalLinePlugin.intersection = null;
+                }
+                
+                cumulativeChart.data.labels = labelsParaGrafica;
+                cumulativeChart.data.datasets = [
+                    {
+                        label: 'Avance Acumulado de la Bolsa',
+                        data: avanceGeneralAcumulado,
+                        borderColor: '#d32f2f',
+                        backgroundColor: 'rgba(211, 47, 47, 0.2)',
+                        fill: true,
+                        tension: 0.2,
+                        pointRadius: 2,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: 'Tu Posición en Bolsa',
+                        data: posicionUsuarioData,
+                        borderColor: '#7f1d1d',
+                        borderDash: [5, 5],
+                        backgroundColor: 'transparent',
+                        pointRadius: 0,
+                        tension: 0.1
+                    }
+                ];
+                cumulativeChart.update();
+
+                const coloresBarras = MESES.map((_, index) => index === resultado.mesIndex ? '#7f1d1d' : '#fca5a5');
+                monthlyCallsChart.data.datasets = [{
+                    label: 'Llamamientos Mensuales',
+                    data: Object.values(LLAMAMIENTOS_MENSUALES),
+                    backgroundColor: coloresBarras,
+                    borderRadius: 4
+                }];
+                monthlyCallsChart.update();
+            }
+
+            // --- INICIALIZACIÓN Y EVENTOS ---
             document.getElementById('calculateBtn').addEventListener('click', () => {
-                const posicion = parseInt(document.getElementById('bolsaPos').value);
-                const vacantes = parseInt(document.getElementById('vacantesAgosto').value);
+                const posicion = parseInt(document.getElementById('bolsaPos').value) || 0;
+                const vacantes = parseInt(document.getElementById('vacantesAgosto').value) || 0;
                 
-                const posicionEfectiva = Math.max(0, posicion - vacantes);
-                
-                const resultado = calcularPronostico(posicionEfectiva);
-                actualizarUI(resultado, posicionEfectiva);
+                const resultado = calculateForecast(posicion, vacantes);
+                updateUI(resultado, posicion, vacantes);
             });
             
-            // Simular un clic al cargar la página para mostrar el resultado inicial
+            createCharts();
             document.getElementById('calculateBtn').click();
         });
     </script>
